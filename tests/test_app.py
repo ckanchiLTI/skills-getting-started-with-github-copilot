@@ -43,3 +43,24 @@ def test_capacity_rejected():
     assert res.status_code == 400
     assert "Activity is full" in res.json().get("detail", "")
     del activities_db["Tiny"]
+
+
+def test_unregister_success():
+    email = "michael@mergington.edu"
+    assert email in activities_db["Chess Club"]["participants"]
+    res = client.delete("/activities/Chess Club/participants", params={"email": email})
+    assert res.status_code == 200
+    assert email not in activities_db["Chess Club"]["participants"]
+
+
+def test_unregister_not_signed():
+    email = "notregistered@mergington.edu"
+    res = client.delete("/activities/Chess Club/participants", params={"email": email})
+    assert res.status_code == 400
+    assert "not signed up" in res.json().get("detail", "")
+
+
+def test_unregister_activity_not_found():
+    res = client.delete("/activities/Nope/participants", params={"email": "x@x.org"})
+    assert res.status_code == 404
+    assert "Activity not found" in res.json().get("detail", "")

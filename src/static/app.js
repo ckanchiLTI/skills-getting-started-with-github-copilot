@@ -57,9 +57,12 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           const list = document.createElement('ul');
           list.className = 'participants-list';
+          let toggleBtn = null;
 
           details.participants.forEach((email, idx) => {
             const li = document.createElement('li');
+            li.dataset.email = email;
+
             // Hide extras when more than 3 to keep the card compact
             if (details.participants.length > 3 && idx >= 3) {
               li.classList.add('hidden');
@@ -74,8 +77,69 @@ document.addEventListener("DOMContentLoaded", () => {
             nameSpan.className = 'participant-name';
             nameSpan.textContent = prettifyEmail(email);
 
+            const delBtn = document.createElement('button');
+            delBtn.className = 'participant-delete';
+            delBtn.title = 'Remove participant';
+            delBtn.textContent = '✖';
+            delBtn.addEventListener('click', async () => {
+              try {
+                const res = await fetch(`/activities/${encodeURIComponent(name)}/participants?email=${encodeURIComponent(email)}`, {
+                  method: 'DELETE'
+                });
+
+                if (res.ok) {
+                  // Remove from DOM
+                  li.remove();
+
+                  // Update count
+                  const countSpan = participantsHeader.querySelector('.participants-count');
+                  const prevCount = parseInt(countSpan.textContent.replace(/[()]/g, ''), 10);
+                  const newCount = prevCount - 1;
+                  countSpan.textContent = `(${newCount})`;
+
+                  // If no participants left, show empty state
+                  if (newCount === 0) {
+                    list.remove();
+                    if (toggleBtn) { toggleBtn.remove(); toggleBtn = null; }
+                    const empty = document.createElement('div');
+                    empty.className = 'participants-empty';
+                    empty.textContent = 'No participants yet. Be the first!';
+                    participantsSection.appendChild(empty);
+                  }
+
+                  // If reduced to <=3, remove toggle and unhide any hidden entries
+                  if (newCount <= 3 && toggleBtn) {
+                    const hiddenItems = list.querySelectorAll('li.hidden');
+                    hiddenItems.forEach((item) => item.classList.remove('hidden'));
+                    list.classList.remove('collapsed');
+                    toggleBtn.remove();
+                    toggleBtn = null;
+                  }
+
+                  // Show success message briefly
+                  messageDiv.textContent = (await res.json()).message || 'Participant removed';
+                  messageDiv.className = 'message success';
+                  messageDiv.classList.remove('hidden');
+                  setTimeout(() => messageDiv.classList.add('hidden'), 5000);
+                } else {
+                  const err = await res.json();
+                  messageDiv.textContent = err.detail || 'Failed to remove participant';
+                  messageDiv.className = 'message error';
+                  messageDiv.classList.remove('hidden');
+                  setTimeout(() => messageDiv.classList.add('hidden'), 5000);
+                }
+              } catch (error) {
+                console.error('Error removing participant:', error);
+                messageDiv.textContent = 'Failed to remove participant';
+                messageDiv.className = 'message error';
+                messageDiv.classList.remove('hidden');
+                setTimeout(() => messageDiv.classList.add('hidden'), 5000);
+              }
+            });
+
             li.appendChild(avatar);
             li.appendChild(nameSpan);
+            li.appendChild(delBtn);
             list.appendChild(li);
           });
 

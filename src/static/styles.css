@@ -161,10 +161,11 @@ footer {
   vertical-align: middle;
 }
 
-/* Bulleted list with avatars */
+/* Clean list with avatars (hide bullets) */
 .participants-list {
   margin-top: 8px;
-  padding-left: 20px; /* preserve bullet */
+  padding-left: 0;
+  list-style: none;
   max-width: 100%;
 }
 
@@ -173,12 +174,6 @@ footer {
   display: flex;
   align-items: center;
   gap: 8px;
-  list-style: disc;
-}
-
-.participants-list li::marker {
-  color: #1a237e;
-  font-size: 0.9em;
 }
 
 /* Avatar */
@@ -221,6 +216,21 @@ footer {
   border: none;
   font-size: 13px;
   padding: 4px 6px;
+}
+
+/* Delete button */
+.participant-delete {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #c62828;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+}
+
+.participant-delete:hover {
+  color: #8e0000;
 }
 
 /* Small screens: slightly tighter */
